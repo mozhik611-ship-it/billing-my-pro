@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Restaurant Management — Single File</title>
+
+  <!-- QR and PDF libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+/* === MERGED styles.css === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    position: sticky;
+    top:0;
+    z-index: 999;
+}
+
+.header-inner { display:flex; align-items:center; justify-content:space-between; gap:1rem; max-width:1400px; margin:0 auto; }
+.header-left { display:flex; align-items:center; gap:1rem; }
+header h1 {
+    color: #667eea;
+    margin-bottom: 0.1rem;
+    font-size: 1.25rem;
+}
+
+nav {
+    display: flex;
+    gap: 1rem;
+    align-items:center;
+}
+
+nav a {
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: all 0.3s;
+    background: transparent;
+}
+
+nav a.active, nav a:hover {
+    background: #667eea;
+    color: white;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+}
+
+/* Menu Section */
+.menu-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.menu-section h2 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.menu-item-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.menu-item-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.menu-item-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #e0e0e0;
+    display: block;
+}
+
+.menu-item-info {
+    padding: 1rem;
+}
+
+.menu-item-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.menu-item-price {
+    font-size: 1.1rem;
+    color: #667eea;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.add-to-cart-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.add-to-cart-btn:hover {
+    background: #5568d3;
+}
+
+/* Cart Section */
+.cart-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+}
+
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #eee;
+}
+
+.cart-header h2 {
+    color: #667eea;
+}
+
+.clear-cart-btn {
+    padding: 0.5rem 1rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.clear-cart-btn:hover {
+    background: #c82333;
+}
+
+.cart-items {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.empty-cart {
+    text-align: center;
+    color: #999;
+    padding: 2rem;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.cart-item-price {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-width: 35px;
+    min-height: 35px;
+}
+
+.quantity-btn:hover {
+    background: #f0f0f0;
+}
+
+.cart-item-quantity {
+    min-width: 30px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.cart-item-total {
+    font-weight: 700;
+    color: #667eea;
+    min-width: 80px;
+    text-align: right;
+}
+
+.cart-footer {
+    border-top: 2px solid #eee;
+    padding-top: 1rem;
+}
+
+.cart-total {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.pay-now-btn, .print-bill-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.pay-now-btn {
+    background: #28a745;
+    color: white;
+}
+
+.pay-now-btn:hover:not(:disabled) {
+    background: #218838;
+}
+
+.print-bill-btn {
+    background: #17a2b8;
+    color: white;
+}
+
+.print-bill-btn:hover:not(:disabled) {
+    background: #138496;
+}
+
+.pay-now-btn:disabled, .print-bill-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+#qrcode {
+    margin: 1rem auto;
+    padding: 1rem;
+    background: white;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 250px;
+}
+
+#qrcode canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+#qrcode img {
+    max-width:100%;
+    height:auto;
+}
+
+.upi-id {
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.complete-payment-btn {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.complete-payment-btn:hover {
+    background: #218838;
+}
+
+/* Print Bill */
+.print-bill {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    display:none;
+}
+
+.bill-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.bill-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+
+.bill-table th, .bill-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.bill-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+.bill-table tfoot {
+    border-top: 2px solid #333;
+}
+
+.bill-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 2px solid #eee;
+}
+
+/* Admin Page */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 2rem;
+}
+
+.menu-form-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+}
+
+.menu-form-section h2 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.save-btn, .cancel-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.save-btn {
+    background: #28a745;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #218838;
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #5a6268;
+}
+
+.menu-list-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.menu-list-section h2 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.menu-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.admin-menu-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-menu-item-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.admin-menu-item-info {
+    padding: 1rem;
+}
+
+.admin-menu-item-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.admin-menu-item-price {
+    color: #667eea;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.admin-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-btn, .delete-btn {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background: #17a2b8;
+    color: white;
+}
+
+.edit-btn:hover {
+    background: #138496;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+}
+
+/* Sales Report Page */
+.sales-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.filter-section, .sales-summary, .item-sales, .order-details {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.filter-section h2, .sales-summary h2, .item-sales h2, .order-details h2 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.sales-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-controls .form-group {
+    flex: 1;
+}
+
+.date-clear-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #eee;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.date-clear-section .form-group {
+    flex: 1;
+}
+
+.date-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.clear-date-btn {
+    padding: 0.75rem 1.5rem;
+    background: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background 0.3s;
+    white-space: nowrap;
+}
+
+.clear-date-btn:hover {
+    background: #f57c00;
+}
+
+.clear-date-btn:active {
+    transform: scale(0.98);
+}
+
+.filter-btn {
+    padding: 0.75rem 2rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    background: #5568d3;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+}
+
+.summary-card h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+.summary-card p {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.export-buttons {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.export-btn {
+    padding: 0.75rem 1.5rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.export-btn:hover {
+    background: #218838;
+}
+
+.clear-sales-btn {
+    padding: 0.75rem 1.5rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background 0.3s;
+}
+
+.clear-sales-btn:hover {
+    background: #c82333;
+}
+
+.clear-sales-btn:active {
+    transform: scale(0.98);
+}
+
+.sales-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sales-table th, .sales-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.sales-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.no-data {
+    text-align: center;
+    color: #999;
+    padding: 2rem;
+}
+
+.order-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.order-items {
+    margin-top: 0.5rem;
+    padding-left: 1rem;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+    color: #666;
+}
+
+.order-total {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #ddd;
+    font-weight: 700;
+    color: #667eea;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+
+    .admin-container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+
+    .menu-form-section {
+        position: static;
+    }
+
+    .cart-section {
+        position: static;
+        margin-top: 2rem;
+    }
+
+    .menu-section {
+        padding: 1.5rem;
+    }
+
+    .menu-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    nav {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    nav a {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .container, .admin-container, .sales-container {
+        padding: 0 1rem;
+    }
+
+    .menu-section, .cart-section, .menu-form-section, .menu-list-section {
+        padding: 1rem;
+    }
+
+    .menu-grid, .menu-items-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .menu-item-image {
+        height: 150px;
+    }
+
+    .menu-item-name {
+        font-size: 1rem;
+    }
+
+    .menu-item-price {
+        font-size: 1rem;
+    }
+
+    .cart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .cart-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .cart-item {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .cart-item-info {
+        flex: 1 1 100%;
+    }
+
+    .cart-item-controls {
+        flex: 1;
+    }
+
+    .cart-item-total {
+        flex: 1;
+        text-align: right;
+    }
+
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filter-controls .form-group {
+        width: 100%;
+    }
+
+    .date-clear-section {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .date-clear-section .form-group {
+        width: 100%;
+    }
+
+    .clear-date-btn {
+        width: 100%;
+    }
+
+    .export-buttons {
+        flex-direction: column;
+    }
+
+    .export-btn {
+        width: 100%;
+    }
+
+    .sales-summary-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .clear-sales-btn {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+        margin: 10% auto;
+    }
+
+    #qrcode {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    #qrcode canvas {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 0.75rem;
+    }
+
+    header h1 {
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    nav a {
+        width: 100%;
+        text-align: center;
+        padding: 0.5rem;
+    }
+
+    .container, .admin-container, .sales-container {
+        padding: 0 0.75rem;
+    }
+
+    .menu-section, .cart-section, .menu-form-section, .menu-list-section,
+    .filter-section, .sales-summary, .item-sales, .order-details {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .menu-grid, .menu-items-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .menu-item-image {
+        height: 180px;
+    }
+
+    .menu-item-info {
+        padding: 0.75rem;
+    }
+
+    .menu-item-name {
+        font-size: 1.1rem;
+    }
+
+    .add-to-cart-btn {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .cart-section {
+        padding: 1rem;
+    }
+
+    .cart-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .clear-cart-btn {
+        width: 100%;
+        padding: 0.6rem;
+    }
+
+    .cart-items {
+        max-height: 300px;
+    }
+
+    .cart-item {
+        padding: 0.75rem;
+    }
+
+    .cart-total {
+        font-size: 1.1rem;
+        padding: 0.75rem;
+    }
+
+    .pay-now-btn, .print-bill-btn {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group input, .form-group select {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .save-btn, .cancel-btn {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .admin-menu-item-image {
+        height: 120px;
+    }
+
+    .summary-card {
+        padding: 1.5rem;
+    }
+
+    .summary-card h3 {
+        font-size: 0.9rem;
+    }
+
+    .summary-card p {
+        font-size: 1.5rem;
+    }
+
+    .sales-table {
+        font-size: 0.85rem;
+    }
+
+    .sales-table th, .sales-table td {
+        padding: 0.5rem;
+    }
+
+    .order-card {
+        padding: 0.75rem;
+    }
+
+    .modal-content {
+        padding: 1rem;
+        margin: 5% auto;
+    }
+
+    .modal-content h2 {
+        font-size: 1.2rem;
+    }
+
+    #qrcode {
+        max-width: 200px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+    }
+
+    header, nav, .cart-section, .menu-section, .modal {
+        display: none !important;
+    }
+
+    .print-bill {
+        display: block !important;
+        box-shadow: none;
+    }
+}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <h1>Restaurant</h1>
+      </div>
+
+      <nav>
+        <a href="#" id="navMenu">Menu</a>
+        <a href="#" id="navAdmin">Manage Menu</a>
+        <a href="#" id="navSales">Sales Report</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MENU + CART -->
+  <main>
+    <div id="menuPage" class="page" style="display:block;">
+      <div class="container">
+        <section class="menu-section">
+          <h2>Our Menu</h2>
+          <div class="menu-grid" id="menuGrid">
+            <!-- Dynamically filled -->
+          </div>
+        </section>
+
+        <aside class="cart-section">
+          <div class="cart-header">
+            <h2>Cart</h2>
+            <button class="clear-cart-btn" onclick="clearCart()">Clear Cart</button>
+          </div>
+
+          <div class="cart-items" id="cartItems">
+            <p class="empty-cart">Your cart is empty</p>
+          </div>
+
+          <div class="cart-footer">
+            <div class="cart-total">
+              <strong>Total: ₹<span id="cartTotal">0</span></strong>
+            </div>
+
+            <button class="pay-now-btn" onclick="showQRCode()" disabled>Pay Now</button>
+            <button class="print-bill-btn" onclick="printBill()" disabled>Print Bill</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ADMIN PAGE -->
+    <div id="adminPage" class="page" style="display:none; padding:20px 0;">
+      <div class="admin-container">
+        <section class="menu-form-section">
+          <h2 id="formTitle">Add New Menu Item</h2>
+          <form id="menuForm" onsubmit="saveMenuItemForm(event)">
+            <input type="hidden" id="itemId">
+
+            <div class="form-group">
+              <label for="itemName">Item Name:</label>
+              <input type="text" id="itemName" required>
+            </div>
+
+            <div class="form-group">
+              <label for="itemPrice">Price (₹):</label>
+              <input type="number" id="itemPrice" min="0" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+              <label for="itemImage">Image URL:</label>
+              <input type="url" id="itemImage" placeholder="https://example.com/image.jpg">
+              <small>Leave empty to use placeholder image</small>
+            </div>
+
+            <div class="form-group">
+              <label for="itemCategory">Category:</label>
+              <select id="itemCategory">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+                <option value="snacks">Snacks</option>
+              </select>
+            </div>
+
+            <div class="form-buttons">
+              <button type="submit" class="save-btn">Save Item</button>
+              <button type="button" class="cancel-btn" onclick="resetForm()">Cancel</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="menu-list-section">
+          <h2>Menu Items</h2>
+          <div class="menu-items-grid" id="menuItemsGrid">
+            <!-- Admin items here -->
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- SALES PAGE -->
+    <div id="salesPage" class="page" style="display:none; padding:20px 0;">
+      <div class="sales-container">
+        <section class="filter-section">
+          <h2>Filter Report</h2>
+          <div class="filter-controls">
+            <div class="form-group">
+              <label for="reportYear">Year:</label>
+              <select id="reportYear"></select>
+            </div>
+            <div class="form-group">
+              <label for="reportMonth">Month:</label>
+              <select id="reportMonth">
+                <option value="all">All Months</option>
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+              </select>
+            </div>
+            <button onclick="loadSalesReport()" class="filter-btn">Generate Report</button>
+          </div>
+
+          <div class="date-clear-section">
+            <div class="form-group">
+              <label for="clearDate">Clear Sales for Specific Date:</label>
+              <input type="date" id="clearDate" class="date-input">
+            </div>
+            <button onclick="clearSalesByDate()" class="clear-date-btn">Clear Sales for Date</button>
+          </div>
+        </section>
+
+        <section class="sales-summary">
+          <div class="sales-summary-header">
+            <h2>Sales Summary</h2>
+            <button onclick="clearSalesData()" class="clear-sales-btn">Clear Sales Data</button>
+          </div>
+          <div class="summary-cards">
+            <div class="summary-card">
+              <h3>Total Orders</h3>
+              <p id="totalOrders">0</p>
+            </div>
+            <div class="summary-card">
+              <h3>Total Revenue</h3>
+              <p>₹<span id="totalRevenue">0</span></p>
+            </div>
+            <div class="summary-card">
+              <h3>Average Order Value</h3>
+              <p>₹<span id="avgOrderValue">0</span></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="item-sales">
+          <h2>Item-wise Sales</h2>
+          <div class="export-buttons">
+            <button onclick="exportToCSV()" class="export-btn">Export to CSV</button>
+            <button onclick="exportToPDF()" class="export-btn">Export to PDF</button>
+          </div>
+          <table class="sales-table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Quantity Sold</th>
+                <th>Total Revenue</th>
+              </tr>
+            </thead>
+            <tbody id="itemSalesTable">
+              <tr><td colspan="3" class="no-data">Select a month to view sales data</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="order-details">
+          <h2>Order Details</h2>
+          <div class="orders-list" id="ordersList">
+            <p class="no-data">Select a month to view order details</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- QR Modal -->
+<div id="qrModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeQRModal()">&times;</span>
+    <h2>Scan to Pay</h2>
+
+    <div id="qrcode" style="text-align:center;">
+      <img src="image/bills" alt="qr code" id="qr">
+      </div>
+
+    <p>Total Amount: ₹<span id="qrAmount">0</span></p>
+    <p class="upi-id">UPI ID: mozhik61</p>
+    <button onclick="completePayment()" class="complete-payment-btn">Payment Complete</button>
+  </div>
+</div>
+
+  <!-- Print Bill (hidden) -->
+  <div id="printBill" class="print-bill">
+    <div class="bill-header">
+      <h2>Restaurant Bill</h2>
+      <p>Date: <span id="billDate"></span></p>
+      <p>Time: <span id="billTime"></span></p>
+    </div>
+    <table class="bill-table">
+      <thead>
+        <tr>
+          <th>Item</th><th>Qty</th><th>Price</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody id="billItems"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3"><strong>Grand Total</strong></td>
+          <td><strong>₹<span id="billTotal">0</span></strong></td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="bill-footer">
+      <p>Thank you for your visit!</p>
+    </div>
+  </div>
+
+  <script>
+/* ===========================
+   MERGED JavaScript
+   - Core: menu + cart + orders
+   - Admin functions
+   - Sales functions
+   =========================== */
+
+/* ---------- Storage helpers ---------- */
+function getMenuItems() {
+    const items = localStorage.getItem('menuItems');
+    return items ? JSON.parse(items) : [];
+}
+function saveMenuItems(items) {
+    localStorage.setItem('menuItems', JSON.stringify(items));
+}
+function getCart() {
+    const cart = localStorage.getItem('cart');
+    return cart ? JSON.parse(cart) : [];
+}
+function saveCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
+}
+function getOrders() {
+    const orders = localStorage.getItem('orders');
+    return orders ? JSON.parse(orders) : [];
+}
+function saveOrders(orders) {
+    localStorage.setItem('orders', JSON.stringify(orders));
+}
+
+/* ---------- Default menu initialization (script.js) ---------- */
+function initializeDefaultMenu() {
+    const menuItems = getMenuItems();
+    if (menuItems.length === 0) {
+        const defaultMenu = [
+            { id: 1, name: 'Idly', price: 30, image:'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500&h=400&fit=crop&q=80', category:'breakfast' },
+            { id: 2, name: 'Dosa', price: 50, image:'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&h=400&fit=crop&q=80', category:'breakfast' },
+            { id: 3, name: 'Vada', price: 25, image:'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&h=400&fit=crop&q=80', category:'breakfast' },
+            { id: 4, name: 'Egg Omelet', price: 60, image:'https://images.unsplash.com/photo-1615367423057-4fa66e0a7127?w=500&h=400&fit=crop&q=80', category:'breakfast' },
+            { id: 5, name: 'Pongal', price: 40, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'breakfast' },
+            { id: 6, name: 'Upma', price: 35, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'breakfast' },
+            { id: 7, name: 'Chicken Kuzhambu', price: 120, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 8, name: 'Mutton Curry', price: 150, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 9, name: 'Fish Curry', price: 130, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 10, name: 'Biryani', price: 140, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 11, name: 'Sambar Rice', price: 45, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 12, name: 'Curd Rice', price: 40, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 13, name: 'Lemon Rice', price: 45, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 14, name: 'Tomato Rice', price: 45, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'lunch' },
+            { id: 15, name: 'Samosa', price: 20, image:'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&h=400&fit=crop&q=80', category:'snacks' },
+            { id: 16, name: 'Bajji', price: 30, image:'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&h=400&fit=crop&q=80', category:'snacks' },
+            { id: 17, name: 'Pakoda', price: 35, image:'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&h=400&fit=crop&q=80', category:'snacks' },
+            { id: 18, name: 'Bonda', price: 25, image:'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=500&h=400&fit=crop&q=80', category:'snacks' },
+            { id: 19, name: 'Chapati', price: 15, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'dinner' },
+            { id: 20, name: 'Parotta', price: 25, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'dinner' },
+            { id: 21, name: 'Naan', price: 30, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'dinner' },
+            { id: 22, name: 'Fried Rice', price: 80, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'dinner' },
+            { id: 23, name: 'Noodles', price: 75, image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop&q=80', category:'dinner' }
+        ];
+        saveMenuItems(defaultMenu);
+    }
+}
+
+/* ---------- MENU rendering (index/script) ---------- */
+function loadMenu() {
+    const menuItems = getMenuItems();
+    const menuGrid = document.getElementById('menuGrid');
+
+    if (!menuGrid) return;
+
+    if (menuItems.length === 0) {
+        menuGrid.innerHTML = '<p>No menu items available. Please add items in the admin page.</p>';
+        return;
+    }
+
+    menuGrid.innerHTML = menuItems.map(item => {
+        const placeholderUrl = `https://via.placeholder.com/500x400/667eea/ffffff?text=${encodeURIComponent(item.name)}`;
+        const imageUrl = item.image || placeholderUrl;
+        return `
+        <div class="menu-item-card">
+            <img src="${imageUrl}"
+                 alt="${item.name}"
+                 class="menu-item-image"
+                 loading="lazy"
+                 onerror="this.onerror=null; this.src='${placeholderUrl}'">
+            <div class="menu-item-info">
+                <div class="menu-item-name">${item.name}</div>
+                <div class="menu-item-price">₹${item.price}</div>
+                <button class="add-to-cart-btn" onclick="addToCart(${item.id})">Add to Cart</button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+/* ---------- CART functions (script.js) ---------- */
+function addToCart(itemId) {
+    const menuItems = getMenuItems();
+    const item = menuItems.find(i => i.id === itemId);
+
+    if (!item) return;
+
+    let cart = getCart();
+    const existingItem = cart.find(c => c.id === itemId);
+
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: 1
+        });
+    }
+
+    saveCart(cart);
+    updateCart();
+}
+
+function updateCart() {
+    const cart = getCart();
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const payNowBtn = document.querySelector('.pay-now-btn');
+    const printBillBtn = document.querySelector('.print-bill-btn');
+
+    if (!cartItems || !cartTotal) return;
+
+    if (cart.length === 0) {
+        cartItems.innerHTML = '<p class="empty-cart">Your cart is empty</p>';
+        cartTotal.textContent = '0';
+        if (payNowBtn) payNowBtn.disabled = true;
+        if (printBillBtn) printBillBtn.disabled = true;
+        return;
+    }
+
+    if (payNowBtn) payNowBtn.disabled = false;
+    if (printBillBtn) printBillBtn.disabled = false;
+
+    cartItems.innerHTML = cart.map(item => `
+        <div class="cart-item">
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">₹${item.price} each</div>
+            </div>
+            <div class="cart-item-controls">
+                <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                <span class="cart-item-quantity">${item.quantity}</span>
+                <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+            </div>
+            <div class="cart-item-total">₹${(item.price * item.quantity).toFixed(2)}</div>
+        </div>
+    `).join('');
+
+    const total = calculateTotal();
+    cartTotal.textContent = total.toFixed(2);
+}
+
+function updateQuantity(itemId, change) {
+    let cart = getCart();
+    const item = cart.find(c => c.id === itemId);
+
+    if (!item) return;
+
+    item.quantity += change;
+
+    if (item.quantity <= 0) {
+        cart = cart.filter(c => c.id !== itemId);
+    }
+
+    saveCart(cart);
+    updateCart();
+}
+
+function calculateTotal() {
+    const cart = getCart();
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+}
+
+function clearCart() {
+    if (confirm('Are you sure you want to clear the cart?')) {
+        saveCart([]);
+        updateCart();
+    }
+}
+
+/* ---------- QR code and payment (script.js) ---------- */
+function showQRCode() {
+    const cart = getCart();
+    if (cart.length === 0) {
+        alert('Your cart is empty. Please add items to cart first.');
+        return;
+    }
+
+    const total = calculateTotal();
+    const modal = document.getElementById('qrModal');
+    const qrContainer = document.getElementById('qrcode');
+    const qrAmount = document.getElementById('qrAmount');
+
+    qrAmount.textContent = total.toFixed(2);
+    qrContainer.innerHTML = '<div style="text-align: center; padding: 20px;">Generating QR Code...</div>';
+
+    // Generate QR code with UPI payment string
+    const upiString = `upi://pay?pa=restaurant@paytm&pn=Restaurant&am=${total.toFixed(2)}&cu=INR`;
+
+    // Check if QRCode library is loaded
+    if (typeof QRCode === 'undefined') {
+        qrContainer.innerHTML = '<p style="color: red; padding: 20px;">QR Code library not loaded. Please refresh the page.</p>';
+        modal.style.display = 'block';
+        return;
+    }
+
+    // Clear container
+    qrContainer.innerHTML = '';
+
+    // Generate QR code using toDataURL method (more reliable)
+    QRCode.toDataURL(upiString, {
+        width: 250,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'M'
+    }, function (error, url) {
+        if (error) {
+            console.error('QR Code generation error:', error);
+            // Fallback: Try canvas method
+            try {
+                const canvas = document.createElement('canvas');
+                qrContainer.appendChild(canvas);
+                QRCode.toCanvas(canvas, upiString, {
+                    width: 250,
+                    margin: 2,
+                    color: { dark: '#000000', light: '#FFFFFF' }
+                }, function (canvasError) {
+                    if (canvasError) {
+                        qrContainer.innerHTML = '<p style="color: red; padding: 20px;">Error generating QR code. Please refresh and try again.</p>';
+                    } else {
+                        canvas.style.display = 'block';
+                        canvas.style.margin = '0 auto';
+                    }
+                });
+            } catch (e) {
+                qrContainer.innerHTML = '<p style="color: red; padding: 20px;">Error generating QR code. Please refresh and try again.</p>';
+            }
+        } else {
+            // Success: Display QR code as image
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = 'Payment QR Code';
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.display = 'block';
+            img.style.margin = '0 auto';
+            qrContainer.appendChild(img);
+        }
+    });
+
+    modal.style.display = 'flex';
+}
+
+function closeQRModal() {
+    document.getElementById('qrModal').style.display = 'none';
+}
+
+function completePayment() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    // Save order
+    saveOrder();
+
+    // Clear cart
+    saveCart([]);
+    updateCart();
+
+    // Close modal
+    closeQRModal();
+
+    alert('Payment successful! Order has been saved.');
+}
+
+function saveOrder() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    const orders = getOrders();
+    const now = new Date();
+
+    const order = {
+        id: Date.now(),
+        items: cart.map(item => ({
+            itemId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+        })),
+        total: calculateTotal(),
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+        timestamp: now.getTime(),
+        year: now.getFullYear(),
+        month: now.getMonth()
+    };
+
+    orders.push(order);
+    saveOrders(orders);
+}
+
+/* ---------- Print bill (script.js) ---------- */
+function printBill() {
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    const total = calculateTotal();
+    const now = new Date();
+    const billDate = document.getElementById('billDate');
+    const billTime = document.getElementById('billTime');
+    const billItems = document.getElementById('billItems');
+    const billTotal = document.getElementById('billTotal');
+    const printBillDiv = document.getElementById('printBill');
+
+    billDate.textContent = now.toLocaleDateString();
+    billTime.textContent = now.toLocaleTimeString();
+    billTotal.textContent = total.toFixed(2);
+
+    billItems.innerHTML = getCart().map(item => `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>₹${item.price}</td>
+            <td>₹${(item.price * item.quantity).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    // Show print bill and print
+    printBillDiv.style.display = 'block';
+    window.print();
+    printBillDiv.style.display = 'none';
+}
+
+/* Close modal when clicking outside */
+window.onclick = function(event) {
+    const modal = document.getElementById('qrModal');
+    if (event.target === modal) {
+        closeQRModal();
+    }
+}
+
+/* ---------- ADMIN functions (admin.js) ---------- */
+function loadMenuItemsAdmin() {
+    const menuItems = getMenuItems();
+    const menuItemsGrid = document.getElementById('menuItemsGrid');
+
+    if (!menuItemsGrid) return;
+
+    if (menuItems.length === 0) {
+        menuItemsGrid.innerHTML = '<p class="no-data">No menu items. Add your first item using the form.</p>';
+        return;
+    }
+
+    menuItemsGrid.innerHTML = menuItems.map(item => {
+        const placeholderUrl = `https://via.placeholder.com/500x400/667eea/ffffff?text=${encodeURIComponent(item.name)}`;
+        const imageUrl = item.image || placeholderUrl;
+        return `
+        <div class="admin-menu-item">
+            <img src="${imageUrl}"
+                 alt="${item.name}"
+                 class="admin-menu-item-image"
+                 loading="lazy"
+                 onerror="this.onerror=null; this.src='${placeholderUrl}'">
+            <div class="admin-menu-item-info">
+                <div class="admin-menu-item-name">${item.name}</div>
+                <div class="admin-menu-item-price">₹${item.price}</div>
+                <div class="admin-item-actions">
+                    <button class="edit-btn" onclick="editMenuItem(${item.id})">Edit</button>
+                    <button class="delete-btn" onclick="deleteMenuItem(${item.id})">Delete</button>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+function saveMenuItemForm(event) {
+    event.preventDefault();
+
+    const itemId = document.getElementById('itemId').value;
+    const name = document.getElementById('itemName').value.trim();
+    const priceVal = document.getElementById('itemPrice').value;
+    const price = parseFloat(priceVal);
+    const image = document.getElementById('itemImage').value.trim();
+    const category = document.getElementById('itemCategory').value;
+
+    if (!name || isNaN(price) || price < 0) {
+        alert('Please fill in all required fields correctly.');
+        return;
+    }
+
+    let menuItems = getMenuItems();
+
+    if (itemId) {
+        const index = menuItems.findIndex(item => item.id === parseInt(itemId));
+        if (index !== -1) {
+            menuItems[index] = {
+                ...menuItems[index],
+                name,
+                price,
+                image: image || menuItems[index].image,
+                category
+            };
+        }
+    } else {
+        const newId = menuItems.length > 0 ? Math.max(...menuItems.map(i => i.id)) + 1 : 1;
+        menuItems.push({
+            id: newId,
+            name,
+            price,
+            image: image || `https://via.placeholder.com/400x200?text=${encodeURIComponent(name)}`,
+            category
+        });
+    }
+
+    saveMenuItems(menuItems);
+    loadMenuItemsAdmin();
+    loadMenu();
+    resetForm();
+
+    alert(itemId ? 'Menu item updated successfully!' : 'Menu item added successfully!');
+}
+
+function editMenuItem(id) {
+    const menuItems = getMenuItems();
+    const item = menuItems.find(i => i.id === id);
+
+    if (!item) return;
+
+    document.getElementById('itemId').value = item.id;
+    document.getElementById('itemName').value = item.name;
+    document.getElementById('itemPrice').value = item.price;
+    document.getElementById('itemImage').value = item.image || '';
+    document.getElementById('itemCategory').value = item.category || 'breakfast';
+    document.getElementById('formTitle').textContent = 'Edit Menu Item';
+
+    // scroll
+    document.querySelector('.menu-form-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteMenuItem(id) {
+    if (!confirm('Are you sure you want to delete this menu item?')) return;
+
+    let menuItems = getMenuItems();
+    menuItems = menuItems.filter(item => item.id !== id);
+
+    saveMenuItems(menuItems);
+    loadMenuItemsAdmin();
+    loadMenu();
+
+    alert('Menu item deleted successfully!');
+}
+
+function resetForm() {
+    const form = document.getElementById('menuForm');
+    if (form) form.reset();
+    const idField = document.getElementById('itemId');
+    if (idField) idField.value = '';
+    const title = document.getElementById('formTitle');
+    if (title) title.textContent = 'Add New Menu Item';
+}
+
+/* ---------- SALES functions (sales.js) ---------- */
+function initializeYearDropdown() {
+    const yearSelect = document.getElementById('reportYear');
+    if (!yearSelect) return;
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = '';
+    for (let year = 2020; year <= currentYear + 1; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentYear) option.selected = true;
+        yearSelect.appendChild(option);
+    }
+}
+
+function loadSalesReport() {
+    const yearEl = document.getElementById('reportYear');
+    const monthEl = document.getElementById('reportMonth');
+    if (!yearEl || !monthEl) return;
+    const year = parseInt(yearEl.value);
+    const month = monthEl.value;
+
+    let orders = getOrders();
+
+    orders = orders.filter(order => order.year === year);
+
+    if (month !== 'all') {
+        orders = orders.filter(order => order.month === parseInt(month));
+    }
+
+    if (orders.length === 0) {
+        displayNoData();
+        return;
+    }
+
+    calculateAndDisplaySales(orders);
+    displayItemWiseSales(orders);
+    displayOrderDetails(orders);
+}
+
+function calculateAndDisplaySales(orders) {
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    document.getElementById('totalOrders').textContent = totalOrders;
+    document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(2);
+    document.getElementById('avgOrderValue').textContent = avgOrderValue.toFixed(2);
+}
+
+function displayItemWiseSales(orders) {
+    const itemSales = {};
+
+    orders.forEach(order => {
+        order.items.forEach(item => {
+            if (!itemSales[item.name]) {
+                itemSales[item.name] = { name: item.name, quantity: 0, revenue: 0 };
+            }
+            itemSales[item.name].quantity += item.quantity;
+            itemSales[item.name].revenue += item.price * item.quantity;
+        });
+    });
+
+    const itemSalesArray = Object.values(itemSales).sort((a,b) => b.revenue - a.revenue);
+    const tableBody = document.getElementById('itemSalesTable');
+
+    if (!tableBody) return;
+
+    if (itemSalesArray.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" class="no-data">No sales data available</td></tr>';
+        return;
+    }
+
+    tableBody.innerHTML = itemSalesArray.map(item => `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>₹${item.revenue.toFixed(2)}</td>
+        </tr>
+    `).join('');
+}
+
+function displayOrderDetails(orders) {
+    const ordersList = document.getElementById('ordersList');
+    if (!ordersList) return;
+
+    if (orders.length === 0) {
+        ordersList.innerHTML = '<p class="no-data">No orders found</p>';
+        return;
+    }
+
+    orders.sort((a,b) => b.timestamp - a.timestamp);
+
+    ordersList.innerHTML = orders.map(order => `
+        <div class="order-card">
+            <div class="order-header">
+                <span>Order #${order.id}</span>
+                <span>${order.date} ${order.time}</span>
+            </div>
+            <div class="order-items">
+                ${order.items.map(item => `
+                    <div class="order-item">
+                        <span>${item.name} x${item.quantity}</span>
+                        <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="order-total">
+                Total: ₹${order.total.toFixed(2)}
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayNoData() {
+    document.getElementById('totalOrders').textContent = '0';
+    document.getElementById('totalRevenue').textContent = '0.00';
+    document.getElementById('avgOrderValue').textContent = '0.00';
+    const itemSalesTable = document.getElementById('itemSalesTable');
+    if (itemSalesTable) itemSalesTable.innerHTML = '<tr><td colspan="3" class="no-data">No sales data available for selected period</td></tr>';
+    const ordersList = document.getElementById('ordersList');
+    if (ordersList) ordersList.innerHTML = '<p class="no-data">No orders found for selected period</p>';
+}
+
+function exportToCSV() {
+    const year = parseInt(document.getElementById('reportYear').value);
+    const month = document.getElementById('reportMonth').value;
+
+    let orders = getOrders();
+    orders = orders.filter(order => order.year === year);
+    if (month !== 'all') orders = orders.filter(order => order.month === parseInt(month));
+
+    if (orders.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    const itemSales = {};
+    orders.forEach(order => {
+        order.items.forEach(item => {
+            if (!itemSales[item.name]) itemSales[item.name] = { name: item.name, quantity:0, revenue:0 };
+            itemSales[item.name].quantity += item.quantity;
+            itemSales[item.name].revenue += item.price * item.quantity;
+        });
+    });
+
+    let csv = 'Item Name,Quantity Sold,Total Revenue\n';
+    Object.values(itemSales).forEach(item => {
+        csv += `"${item.name}",${item.quantity},${item.revenue.toFixed(2)}\n`;
+    });
+
+    csv += '\nOrder ID,Date,Time,Total\n';
+    orders.forEach(order => {
+        csv += `${order.id},"${order.date}","${order.time}",${order.total.toFixed(2)}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales_report_${year}_${month === 'all' ? 'all_months' : String(parseInt(month)+1)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function exportToPDF() {
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+        alert('PDF library not loaded.');
+        return;
+    }
+    const year = parseInt(document.getElementById('reportYear').value);
+    const month = document.getElementById('reportMonth').value;
+
+    let orders = getOrders();
+    orders = orders.filter(order => order.year === year);
+    if (month !== 'all') orders = orders.filter(order => order.month === parseInt(month));
+
+    if (orders.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    const doc = new jsPDF();
+    let yPos = 20;
+
+    doc.setFontSize(18);
+    doc.text('Monthly Sales Report', 105, yPos, { align: 'center' });
+    yPos += 10;
+
+    doc.setFontSize(12);
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const period = month === 'all' ? `All Months ${year}` : `${monthNames[parseInt(month)]} ${year}`;
+    doc.text(period, 105, yPos, { align: 'center' });
+    yPos += 15;
+
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.total,0);
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    doc.setFontSize(14);
+    doc.text('Summary', 14, yPos);
+    yPos += 8;
+    doc.setFontSize(10);
+    doc.text(`Total Orders: ${totalOrders}`, 14, yPos); yPos += 6;
+    doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 14, yPos); yPos += 6;
+    doc.text(`Average Order Value: ₹${avgOrderValue.toFixed(2)}`, 14, yPos); yPos += 12;
+
+    // Item-wise sales
+    const itemSales = {};
+    orders.forEach(order => {
+        order.items.forEach(item => {
+            if (!itemSales[item.name]) itemSales[item.name] = { name:item.name, quantity:0, revenue:0 };
+            itemSales[item.name].quantity += item.quantity;
+            itemSales[item.name].revenue += item.price * item.quantity;
+        });
+    });
+
+    doc.setFontSize(14);
+    doc.text('Item-wise Sales', 14, yPos); yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text('Item Name', 14, yPos);
+    doc.text('Quantity', 80, yPos);
+    doc.text('Revenue', 130, yPos);
+    yPos += 6;
+    doc.setFont(undefined, 'normal');
+    doc.line(14, yPos, 190, yPos);
+    yPos += 4;
+
+    Object.values(itemSales).sort((a,b)=>b.revenue-a.revenue).forEach(item => {
+        if (yPos > 270) { doc.addPage(); yPos = 20; }
+        doc.text(item.name, 14, yPos);
+        doc.text(item.quantity.toString(), 80, yPos);
+        doc.text(`₹${item.revenue.toFixed(2)}`, 130, yPos);
+        yPos += 6;
+    });
+
+    const fileName = `sales_report_${year}_${month === 'all' ? 'all_months' : String(parseInt(month)+1)}.pdf`;
+    doc.save(fileName);
+}
+
+function clearSalesByDate() {
+    const dateInput = document.getElementById('clearDate');
+    const selectedDate = dateInput.value;
+    if (!selectedDate) {
+        alert('Please select a date first!');
+        return;
+    }
+
+    const confirmation = confirm(`Are you sure you want to clear ALL sales data for ${selectedDate}? This action cannot be undone!`);
+    if (!confirmation) return;
+
+    let orders = getOrders();
+    const before = orders.length;
+
+    orders = orders.filter(order => {
+        const orderDate = new Date(order.timestamp);
+        const selectedDateObj = new Date(selectedDate);
+        return !(orderDate.getFullYear() === selectedDateObj.getFullYear() &&
+                 orderDate.getMonth() === selectedDateObj.getMonth() &&
+                 orderDate.getDate() === selectedDateObj.getDate());
+    });
+
+    const deletedCount = before - orders.length;
+    if (deletedCount === 0) {
+        alert(`No orders found for the date ${selectedDate}.`);
+        return;
+    }
+
+    saveOrders(orders);
+    alert(`Successfully deleted ${deletedCount} order(s) for ${selectedDate}!`);
+    dateInput.value = '';
+    loadSalesReport();
+}
+
+function clearSalesData() {
+    const confirmation = confirm('Are you sure you want to clear ALL sales data? This action cannot be undone!');
+    if (!confirmation) return;
+    const doubleConfirm = confirm('This will permanently delete all order history. Are you absolutely sure?');
+    if (!doubleConfirm) return;
+
+    localStorage.removeItem('orders');
+    alert('All sales data has been cleared successfully!');
+    displayNoData();
+    loadSalesReport();
+}
+
+/* ---------- Navigation helpers ---------- */
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.getElementById(pageId).style.display = 'block';
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    if (pageId === 'menuPage') document.getElementById('navMenu').classList.add('active');
+    if (pageId === 'adminPage') document.getElementById('navAdmin').classList.add('active');
+    if (pageId === 'salesPage') document.getElementById('navSales').classList.add('active');
+}
+
+/* ---------- Initialization ---------- */
+document.getElementById('navMenu').addEventListener('click', function(e){ e.preventDefault(); showPage('menuPage'); });
+document.getElementById('navAdmin').addEventListener('click', function(e){ e.preventDefault(); showPage('adminPage'); });
+document.getElementById('navSales').addEventListener('click', function(e){ e.preventDefault(); showPage('salesPage'); });
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDefaultMenu();
+    loadMenu();
+    loadMenuItemsAdmin();
+    initializeYearDropdown();
+    loadSalesReport();
+    updateCart();
+});
+  </script>
+</body>
+</html>
